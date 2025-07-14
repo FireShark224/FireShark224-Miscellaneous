@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Discord Webhook</title>
+</head>
+<body>
+    <h1>Send Discord Webhook Message</h1>
+    <form id="webhookForm" enctype="multipart/form-data">
+        <label for="message">Message:</label>
+        <input type="text" id="message" required>
+        <label for="file">File:</label>
+        <input type="file" id="file">
+        <button type="submit">Send</button>
+    </form>
+
+    <script>
+        document.getElementById('webhookForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const message = document.getElementById('message').value;
+            const fileInput = document.getElementById('file');
+            const webhookURL = 'YOUR_WEBHOOK_URL'; // Replace with your webhook URL
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({ content: message }));
+
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            fetch(webhookURL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                } else {
+                    alert('Failed to send message.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending message.');
+            });
+        });
+    </script>
+</body>
+</html>
