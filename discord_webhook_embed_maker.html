@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discord Webhook Embed Builder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #36393f;
+            color: #dcddde;
+        }
+        h1 {
+            color: #7289da;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, textarea, select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 3px;
+            border: 1px solid #202225;
+            background-color: #40444b;
+            color: #dcddde;
+        }
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+        .color-picker {
+            display: flex;
+            align-items: center;
+        }
+        .color-picker input {
+            width: 60px;
+            margin-right: 10px;
+        }
+        button {
+            background-color: #7289da;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.2s;
+        }
+        button:hover {
+            background-color: #677bc4;
+        }
+        .section {
+            background-color: #2f3136;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .section-title {
+            margin-top: 0;
+            color: #7289da;
+        }
+        .field-container {
+            display: flex;
+            gap: 10px;
+        }
+        .field-container > div {
+            flex: 1;
+        }
+        .preview {
+            background-color: #2f3136;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .preview-embed {
+            border-left: 4px solid #7289da;
+            padding: 10px;
+            background-color: #2f3136;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .preview-title {
+            color: #7289da;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .preview-description {
+            margin-bottom: 10px;
+        }
+        .preview-field {
+            display: flex;
+            margin-bottom: 5px;
+        }
+        .preview-field-name {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .preview-footer {
+            font-size: 0.8em;
+            color: #72767d;
+            margin-top: 10px;
+        }
+        .toggle-section {
+            cursor: pointer;
+            user-select: none;
+        }
+        .toggle-section::before {
+            content: "▼";
+            display: inline-block;
+            margin-right: 5px;
+            font-size: 0.8em;
+        }
+        .toggle-section.collapsed::before {
+            content: "▶";
+        }
+        .collapsible {
+            overflow: hidden;
+            transition: max-height 0.2s ease-out;
+        }
+        .collapsed + .collapsible {
+            max-height: 0 !important;
+        }
+    </style>
+</head>
+<body>
+    <h1>Discord Webhook Embed Builder</h1>
+    
+    <div class="section">
+        <h2 class="section-title">Webhook Settings</h2>
+        <div class="form-group">
+            <label for="webhookURL">Webhook URL:</label>
+            <input type="text" id="webhookURL" placeholder="https://discord.com/api/webhooks/..." required>
+        </div>
+        <div class="form-group">
+            <label for="username">Custom Username:</label>
+            <input type="text" id="username" placeholder="Leave empty to use webhook default">
+        </div>
+        <div class="form-group">
+            <label for="avatarURL">Custom Avatar URL:</label>
+            <input type="text" id="avatarURL" placeholder="Leave empty to use webhook default">
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title toggle-section">Embed Settings</h2>
+        <div class="collapsible" style="max-height: 1000px;">
+            <div class="form-group">
+                <label for="embedTitle">Title:</label>
+                <input type="text" id="embedTitle" placeholder="Embed title">
+            </div>
+            <div class="form-group">
+                <label for="embedURL">Title URL:</label>
+                <input type="text" id="embedURL" placeholder="https://...">
+            </div>
+            <div class="form-group">
+                <label for="embedDescription">Description:</label>
+                <textarea id="embedDescription" placeholder="Embed description (supports Markdown)"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="embedColor">Color:</label>
+                <div class="color-picker">
+                    <input type="color" id="embedColor" value="#7289da">
+                    <input type="text" id="embedColorHex" placeholder="#7289da" readonly>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title toggle-section">Author</h3>
+                <div class="collapsible" style="max-height: 200px;">
+                    <div class="form-group">
+                        <label for="authorName">Author Name:</label>
+                        <input type="text" id="authorName" placeholder="Author name">
+                    </div>
+                    <div class="form-group">
+                        <label for="authorURL">Author URL:</label>
+                        <input type="text" id="authorURL" placeholder="https://...">
+                    </div>
+                    <div class="form-group">
+                        <label for="authorIcon">Author Icon URL:</label>
+                        <input type="text" id="authorIcon" placeholder="https://.../image.png">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title toggle-section">Fields</h3>
+                <div class="collapsible" style="max-height: 500px;">
+                    <div id="fieldsContainer">
+                        <!-- Fields will be added here -->
+                    </div>
+                    <button type="button" id="addFieldBtn">Add Field</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title toggle-section">Images</h3>
+                <div class="collapsible" style="max-height: 200px;">
+                    <div class="form-group">
+                        <label for="imageURL">Image URL:</label>
+                        <input type="text" id="imageURL" placeholder="https://.../image.png">
+                    </div>
+                    <div class="form-group">
+                        <label for="thumbnailURL">Thumbnail URL:</label>
+                        <input type="text" id="thumbnailURL" placeholder="https://.../thumbnail.png">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h3 class="section-title toggle-section">Footer</h3>
+                <div class="collapsible" style="max-height: 200px;">
+                    <div class="form-group">
+                        <label for="footerText">Footer Text:</label>
+                        <input type="text" id="footerText" placeholder="Footer text">
+                    </div>
+                    <div class="form-group">
+                        <label for="footerIcon">Footer Icon URL:</label>
+                        <input type="text" id="footerIcon" placeholder="https://.../icon.png">
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="addTimestamp"> Include current timestamp
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <h2 class="section-title">Files</h2>
+        <div class="form-group">
+            <label for="fileUpload">File Attachment:</label>
+            <input type="file" id="fileUpload">
+        </div>
+    </div>
+    
+    <button id="sendBtn">Send Embed</button>
+    <button id="previewBtn">Preview Embed</button>
+    
+    <div class="preview" id="previewContainer" style="display: none;">
+        <h3>Embed Preview</h3>
+        <div id="embedPreview"></div>
+    </div>
+    
+    <script>
+        // Toggle sections
+        document.querySelectorAll('.toggle-section').forEach(header => {
+            header.addEventListener('click', () => {
+                header.classList.toggle('collapsed');
+            });
+        });
+        
+        // Color picker
+        const colorPicker = document.getElementById('embedColor');
+        const colorHex = document.getElementById('embedColorHex');
+        
+        colorPicker.addEventListener('input', () => {
+            colorHex.value = colorPicker.value;
+        });
+        
+        colorHex.addEventListener('input', () => {
+            if (/^#[0-9A-F]{6}$/i.test(colorHex.value)) {
+                colorPicker.value = colorHex.value;
+            }
+        });
+        
+        // Field management
+        let fieldCount = 0;
+        const fieldsContainer = document.getElementById('fieldsContainer');
+        const addFieldBtn = document.getElementById('addFieldBtn');
+        
+        addFieldBtn.addEventListener('click', () => {
+            if (fieldCount >= 25) {
+                alert('Maximum of 25 fields reached');
+                return;
+            }
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'field-container';
+            fieldDiv.innerHTML = `
+                <div>
+                    <label>Field ${fieldCount + 1} Name:</label>
+                    <input type="text" class="field-name" placeholder="Field name">
+                </div>
+                <div>
+                    <label>Field ${fieldCount + 1} Value:</label>
+                    <input type="text" class="field-value" placeholder="Field value">
+                </div>
+                <div>
+                    <label>Inline:</label>
+                    <select class="field-inline">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+                <button type="button" class="remove-field">×</button>
+            `;
+            
+            fieldDiv.querySelector('.remove-field').addEventListener('click', () => {
+                fieldsContainer.removeChild(fieldDiv);
+                fieldCount--;
+            });
+            
+            fieldsContainer.appendChild(fieldDiv);
+            fieldCount++;
+        });
+        
+        // Preview embed
+        document.getElementById('previewBtn').addEventListener('click', previewEmbed);
+        
+        function previewEmbed() {
+            const previewContainer = document.getElementById('previewContainer');
+            const embedPreview = document.getElementById('embedPreview');
+            
+            const embedData = buildEmbedData();
+            let previewHTML = '<div class="preview-embed">';
+            
+            // Title
+            if (embedData.title) {
+                if (embedData.url) {
+                    previewHTML += `<div class="preview-title"><a href="${embedData.url}" style="color: inherit;">${embedData.title}</a></div>`;
+                } else {
+                    previewHTML += `<div class="preview-title">${embedData.title}</div>`;
+                }
+            }
+            
+            // Description
+            if (embedData.description) {
+                previewHTML += `<div class="preview-description">${embedData.description.replace(/\n/g, '<br>')}</div>`;
+            }
+            
+            // Fields
+            if (embedData.fields && embedData.fields.length > 0) {
+                embedData.fields.forEach(field => {
+                    previewHTML += `
+                        <div class="preview-field">
+                            <div class="preview-field-name">${field.name}:</div>
+                            <div class="preview-field-value">${field.value}</div>
+                        </div>
+                    `;
+                });
+            }
+            
+            // Footer
+            if (embedData.footer) {
+                previewHTML += `<div class="preview-footer">${embedData.footer.text}</div>`;
+            }
+            
+            previewHTML += '</div>';
+            embedPreview.innerHTML = previewHTML;
+            previewContainer.style.display = 'block';
+        }
+        
+        // Send embed
+        document.getElementById('sendBtn').addEventListener('click', sendEmbed);
+        
+        function buildEmbedData() {
+            const embed = {};
+            
+            // Basic embed info
+            if (document.getElementById('embedTitle').value) {
+                embed.title = document.getElementById('embedTitle').value;
+            }
+            if (document.getElementById('embedURL').value) {
+                embed.url = document.getElementById('embedURL').value;
+            }
+            if (document.getElementById('embedDescription').value) {
+                embed.description = document.getElementById('embedDescription').value;
+            }
+            
+            // Color (convert hex to decimal)
+            const hexColor = document.getElementById('embedColor').value;
+            if (hexColor) {
+                embed.color = parseInt(hexColor.substring(1), 16);
+            }
+            
+            // Author
+            const authorName = document.getElementById('authorName').value;
+            if (authorName) {
+                embed.author = {
+                    name: authorName
+                };
+                if (document.getElementById('authorURL').value) {
+                    embed.author.url = document.getElementById('authorURL').value;
+                }
+                if (document.getElementById('authorIcon').value) {
+                    embed.author.icon_url = document.getElementById('authorIcon').value;
+                }
+            }
+            
+            // Fields
+            const fields = [];
+            document.querySelectorAll('.field-container').forEach(container => {
+                const name = container.querySelector('.field-name').value;
+                const value = container.querySelector('.field-value').value;
+                const inline = container.querySelector('.field-inline').value === 'true';
+                
+                if (name && value) {
+                    fields.push({
+                        name,
+                        value,
+                        inline
+                    });
+                }
+            });
+            
+            if (fields.length > 0) {
+                embed.fields = fields;
+            }
+            
+            // Image
+            if (document.getElementById('imageURL').value) {
+                embed.image = {
+                    url: document.getElementById('imageURL').value
+                };
+            }
+            
+            // Thumbnail
+            if (document.getElementById('thumbnailURL').value) {
+                embed.thumbnail = {
+                    url: document.getElementById('thumbnailURL').value
+                };
+            }
+            
+            // Footer
+            const footerText = document.getElementById('footerText').value;
+            if (footerText) {
+                embed.footer = {
+                    text: footerText
+                };
+                if (document.getElementById('footerIcon').value) {
+                    embed.footer.icon_url = document.getElementById('footerIcon').value;
+                }
+            }
+            
+            // Timestamp
+            if (document.getElementById('addTimestamp').checked) {
+                embed.timestamp = new Date().toISOString();
+            }
+            
+            return embed;
+        }
+        
+        function sendEmbed() {
+            const webhookURL = document.getElementById('webhookURL').value;
+            if (!webhookURL) {
+                alert('Please enter a webhook URL');
+                return;
+            }
+            
+            const payload = {
+                embeds: [buildEmbedData()]
+            };
+            
+            // Optional username/avatar override
+            const username = document.getElementById('username').value;
+            if (username) {
+                payload.username = username;
+            }
+            
+            const avatarURL = document.getElementById('avatarURL').value;
+            if (avatarURL) {
+                payload.avatar_url = avatarURL;
+            }
+            
+            // File upload
+            const fileInput = document.getElementById('fileUpload');
+            let formData;
+            
+            if (fileInput.files.length > 0) {
+                formData = new FormData();
+                formData.append('payload_json', JSON.stringify(payload));
+                formData.append('file', fileInput.files[0]);
+            } else {
+                formData = JSON.stringify(payload);
+            }
+            
+            fetch(webhookURL, {
+                method: 'POST',
+                body: fileInput.files.length > 0 ? formData : JSON.stringify(payload),
+                headers: fileInput.files.length > 0 ? {} : { 'Content-Type': 'application/json' }
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Embed sent successfully!');
+                } else {
+                    response.text().then(text => {
+                        alert(`Failed to send embed: ${text}`);
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending embed');
+            });
+        }
+    </script>
+</body>
+</html>
