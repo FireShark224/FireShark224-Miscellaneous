@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Discord Webhook</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        #editor {
+            min-height: 200px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: white;
+        }
+        #editor:focus {
+            outline: none;
+            border-color: #7289da;
+        }
+        .toolbar {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+        .toolbar button {
+            background: #f0f0f0;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .toolbar button:hover {
+            background: #e0e0e0;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        label {
+            font-weight: bold;
+        }
+        button[type="submit"] {
+            background-color: #7289da;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button[type="submit"]:hover {
+            background-color: #677bc4;
+        }
+    </style>
+</head>
+<body>
+    <h1>Send Discord Webhook Message</h1>
+    <form id="webhookForm" enctype="multipart/form-data">
+        <label for="editor">Message:</label>
+        <div class="toolbar">
+            <button type="button" onclick="formatText('bold')"><b>B</b></button>
+            <button type="button" onclick="formatText('italic')"><i>I</i></button>
+            <button type="button" onclick="formatText('underline')"><u>U</u></button>
+            <button type="button" onclick="formatText('strikethrough')"><s>S</s></button>
+            <button type="button" onclick="formatText('code')"><code>Code</code></button>
+            <button type="button" onclick="formatText('quote')">Quote</button>
+        </div>
+        <div id="editor" contenteditable="true"></div>
+        <input type="hidden" id="message" name="message">
+        <label for="file">File Attachment:</label>
+        <input type="file" id="file">
+        <button type="submit">Send Message</button>
+    </form>
+
+    <script>
+        function formatText(format) {
+            const editor = document.getElementById('editor');
+            const selection = window.getSelection();
+            if (selection.rangeCount === 0) return;
+            
+            const range = selection.getRangeAt(0);
+            const selectedText = range.toString();
+            
+            if (!selectedText) return; // No text selected
+            
+            let formattedText;
+            switch(format) {
+                case 'bold':
+                    formattedText = `**${selectedText}**`;
+                    break;
+                case 'italic':
+                    formattedText = `*${selectedText}*`;
+                    break;
+                case 'underline':
+                    formattedText = `__${selectedText}__`;
+                    break;
+                case 'strikethrough':
+                    formattedText = `~~${selectedText}~~`;
+                    break;
+                case 'code':
+                    formattedText = `\`${selectedText}\``;
+                    break;
+                case 'quote':
+                    formattedText = `> ${selectedText}`;
+                    break;
+                default:
+                    formattedText = selectedText;
+            }
+            
+            // Replace the selected text with formatted text
+            range.deleteContents();
+            range.insertNode(document.createTextNode(formattedText));
+            
+            // Keep focus on the editor
+            editor.focus();
+        }
+
+        document.getElementById('webhookForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            // Get the HTML content and convert to Discord markdown
+            const editorContent = document.getElementById('editor').innerHTML;
+            const message = document.getElementById('editor').innerText;
+            
+            document.getElementById('message').value = message;
+            const messageValue = document.getElementById('message').value;
+            const fileInput = document.getElementById('file');
+            const webhookURL = 'YOUR_WEBHOOK_URL'; // Replace with your webhook URL
+
+            const formData = new FormData();
+            formData.append('payload_json', JSON.stringify({ content: messageValue }));
+
+            if (fileInput.files.length > 0) {
+                formData.append('file', fileInput.files[0]);
+            }
+
+            fetch(webhookURL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (response.ok) {
+                    alert('Message sent successfully!');
+                    document.getElementById('editor').innerHTML = '';
+                } else {
+                    alert('Failed to send message.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error sending message.');
+            });
+        });
+    </script>
+</body>
+</html>
